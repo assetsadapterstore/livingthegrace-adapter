@@ -176,15 +176,17 @@ func (decoder *TransactionDecoder) VerifyRawTransaction(wrapper openwallet.Walle
 			msg, _ := hex.DecodeString(keySignature.Message)
 
 
+			enpub, _ := owcrypt.CURVE25519_convert_Ed_to_X(publicKey)
+
 
 			////验证签名
-			ret := owcrypt.Verify(publicKey, nil, msg, signature, keySignature.EccType)
+			ret := owcrypt.Verify(enpub, nil, msg, signature, keySignature.EccType)
 			if ret != owcrypt.SUCCESS {
-				return fmt.Errorf("transaction verify failed：pub is"+keySignature.Address.PublicKey)
+				return fmt.Errorf("transaction verify failed")
 			}
 
 			tNewSend := RawTransactionSend{
-				SenderPublicKey: hex.EncodeToString(publicKey),
+				SenderPublicKey: tx.Sender,
 				Signature:       hex.EncodeToString(signature),
 				Recipient:       tx.Recipient,
 				AmountNQT:       tx.Amount,
@@ -373,9 +375,7 @@ func (decoder *TransactionDecoder) createRawTransaction(
 
 	enpub, _ := owcrypt.CURVE25519_convert_Ed_to_X(pub)
 
-	pub = enpub
 
-	addr.PublicKey = hex.EncodeToString(pub)
 
 	feeTo := decoder.wm.Config.FixFees.Shift(decimals)
 
@@ -392,7 +392,7 @@ func (decoder *TransactionDecoder) createRawTransaction(
 		return err
 	}
 	eop.Header = &p2p.TransactionHeader{
-		SenderPublicKey: pub,
+		SenderPublicKey: enpub,
 		Recipient:       recipient,
 		Amount:          uint64(amountTo.IntPart()),
 		Fee:             uint64(feeTo.IntPart()),
@@ -406,7 +406,7 @@ func (decoder *TransactionDecoder) createRawTransaction(
 	txStr := hex.EncodeToString(transaction.ToBytes(eop))
 
 	tx := &RawTransactionV2{
-		Sender:        addr.PublicKey,
+		Sender:        hex.EncodeToString(enpub),
 		Recipient:     eop.Header.Recipient,
 		Symbol:        rawTx.Coin.Symbol,
 		Amount:        eop.Header.Amount,
