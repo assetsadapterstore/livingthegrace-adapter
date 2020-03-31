@@ -202,35 +202,16 @@ func TestVerify3(t *testing.T) {
 
 func TestVerify4(t *testing.T) {
 
-	//sig, _ := hex.DecodeString("dc8eefdedc350dbbecffe198d7c511dcc7be23ff6f5a6683e50ab9899c0c2d7e83b54aaf0ae9ea3ee23c476801401f07a1e1d839a6266eb055a3a7184c923985")
-	msg, _ := hex.DecodeString("0000832364011800b62b71519385d3ca30a9c4df605e9ee7d90097f17039a8aba6f04d0b346a6ee33a4263dd37b4ee7740420f0000000000f026700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
-	pub, _ := hex.DecodeString("b62b71519385d3ca30a9c4df605e9ee7d90097f17039a8aba6f04d0b346a6ee3")
+	sig, _ := hex.DecodeString("a3df2abd511b620bb72e1f36725a9de2fe53b8e621af941d4e5182d20bcfe60534d4c901aa1832c587577576ebe2454a6381cad4a9ee3457d5f587f11dc0b6d2")
+	msg, _ := hex.DecodeString("0010260e6b01a005f1ddbdf600d39c03a8e0c4e285b0902055ddd26118c999a6711e9e9b05da6b4dee35250b947f000f809698000000000018370b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000298e0000c87be8f1cd934a1b")
+	pub, _ := hex.DecodeString("554e4ccd9d863f77ef634b8f8c63ff4bec20cecc58b41facad1b9426d4d83485")
 
 	edpub, _ := owcrypt.CURVE25519_convert_Ed_to_X(pub)
 
-
-	prikey, _ := hex.DecodeString("387d0aa2ee3c4be10c32a09c3326b83aee57fbd9b0aa3a35bd0533d657919643")
-
-	fmt.Println(hex.EncodeToString(edpub))
-
-	s2,_,_ := owcrypt.Signature(prikey,nil,msg,owcrypt.ECC_CURVE_X25519)
-	ret2 := owcrypt.Verify(edpub, nil, msg, s2, owcrypt.ECC_CURVE_X25519)
+	ret2 := owcrypt.Verify(edpub, nil, msg, sig, owcrypt.ECC_CURVE_CURVE25519_SHA256)
 	fmt.Println(	ret2)
 
-	fmt.Println(	Verify(s2,msg,edpub,true))
+	//fmt.Println(	Verify(s2,msg,edpub,true))
 
-	//s,_:= Sign2(msg,prikey)
-	//fmt.Println(	Verify(s,msg,edpub,false))
-	//
-	//
-	////ed_pubkey, _ := eddsa.ED25519_genPub(prikey)
-	//
-	////signbit := edpub[31] & 0x80
-	//
-	////s[63] &= 0x7F
-	////s[63] |= signbit
-	//
-	//ret3 := owcrypt.Verify(edpub, nil, msg, s, owcrypt.ECC_CURVE_X25519)
-	//fmt.Println(	ret3)
 
 }

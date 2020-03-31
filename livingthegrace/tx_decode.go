@@ -175,10 +175,12 @@ func (decoder *TransactionDecoder) VerifyRawTransaction(wrapper openwallet.Walle
 			publicKey, _ := hex.DecodeString(keySignature.Address.PublicKey)
 			msg, _ := hex.DecodeString(keySignature.Message)
 
+
+
 			////验证签名
 			ret := owcrypt.Verify(publicKey, nil, msg, signature, keySignature.EccType)
 			if ret != owcrypt.SUCCESS {
-				return fmt.Errorf("transaction verify failed")
+				return fmt.Errorf("transaction verify failed：pub is"+keySignature.Address.PublicKey)
 			}
 
 			tNewSend := RawTransactionSend{
