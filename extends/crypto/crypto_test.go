@@ -1,0 +1,236 @@
+package crypto
+
+import (
+	"encoding/hex"
+	"fmt"
+	"github.com/blocktree/go-owcrypt"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+const secretPhrase = "glad suffer red during single glow shut slam hill death lust although"
+
+
+//const secretPhrase = "glad suffer red during single glow shut slam hill death lust must"
+func hexToBytes(s string) []byte {
+	bs, _ := hex.DecodeString(s)
+	return bs
+}
+
+func TestSecretPhraseToPrivateKey(t *testing.T) {
+	privateKey := secretPhraseToPrivateKey(secretPhrase)
+	assert.Equal(t, "e04c16cfd3d1cbf11a51fa0c75c09d43d307a10ae5149b1ec0ddba661b9d2f5e",
+		hex.EncodeToString(privateKey[:]))
+}
+
+func TestSecretPhraseToPublicKey(t *testing.T) {
+	publicKey := secretPhraseToPublicKey(secretPhrase)
+	assert.Equal(t, "a9fc9b42e3918c3e109fdc819aa092fd06ce7c18d653bf003b31d48d35699104",
+		hex.EncodeToString(publicKey[:]))
+}
+
+func TestSign(t *testing.T) {
+	msg := make([]byte, 128)
+	for i := 0; i < 128; i++ {
+		msg[i] = byte(i)
+	}
+	sig := Sign(msg, secretPhrase)
+	privateKey := secretPhraseToPrivateKey(secretPhrase)
+	sig ,_= Sign2(msg, privateKey)
+	assert.Equal(t, "cea74dd7177ddd8bd88e4a0d8807da533e95195d97cc4bcb0f946f355a8c85035ebe57fe9628f93405cf9f7e83bfc64968bc992d3508434a3023fba6b6cab491", (hex.EncodeToString(sig)))
+}
+
+type verifyTestCase struct {
+	sig    string
+	pubKey string
+	msg    string
+}
+
+var verifyTestCases = []*verifyTestCase{
+	&verifyTestCase{
+		sig:    "8B56C7E025692298118B46B13934DC913736A82B7E03926CEA3E94F9C2F939036D2FB38E5AAFC4904A25B60DFCCFDE58EA5C044DB03FB652D538D87F37D594A7",
+		pubKey: "8C22857E71B401212FC95A340198C61A11CFA17F6553F5101BD2EFF49981DB4B",
+		msg:    "00002EC20000A0058C22857E71B401212FC95A340198C61A11CFA17F6553F5101BD2EFF49981DB4B20397FC3C03E152400460A99E800000000CA9A3B00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+	},
+	&verifyTestCase{
+		sig:    "F1E2128A8E2CFA099407B0595CCE49C03AE89F40B731ADEFEBC38FF023351A0D8F9E3B52F3B68DD2F552E209ADCC829F70F9E58B48F5585C56FE2D57355D8B0A",
+		pubKey: "18BC3D3E3B7AD01A77FB85315330397413C0052FC403CB2C555C87EFED2B897E",
+		msg:    "00001EE50000A00518BC3D3E3B7AD01A77FB85315330397413C0052FC403CB2C555C87EFED2B897E370D00E5722B437400E1F5050000000000E1F50500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+	},
+	&verifyTestCase{
+		sig:    "CDA595EA0AD2739C7DBFBBB9A01067BC757AA288ECB6EB60938B172E6466220212ADA84F380DB1C76D69D7EFDF211E7835274D7A76ADFD8189D26DF041E62AF6",
+		pubKey: "18BC3D3E3B7AD01A77FB85315330397413C0052FC403CB2C555C87EFED2B897E",
+		msg:    "000077E50000A00518BC3D3E3B7AD01A77FB85315330397413C0052FC403CB2C555C87EFED2B897E1B812086BEDFF26A00A3E1110000000000E1F50500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+	},
+	&verifyTestCase{
+		sig:    "D14B7671B1539E16F6FE975D9DFDDB7D48B08C5EA28A96E5E27B145188A943035A1FF64381D1B4E406485E5748D0DA34A56D6D8A9B03AEA125C68F88AD9DA985",
+		pubKey: "18BC3D3E3B7AD01A77FB85315330397413C0052FC403CB2C555C87EFED2B897E",
+		msg:    "000060E50000A00518BC3D3E3B7AD01A77FB85315330397413C0052FC403CB2C555C87EFED2B897EE7DD9DFAA8F664A700C2EB0B0000000000E1F50500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+	},
+	&verifyTestCase{
+		sig:    "4444CAAF7F0996A1DCD37AEC29D07CD8BDC964159F175D2D25EE3F49D4C69504C353109AFE21F6FA28E01BC1B1A2279C270E4890B5A3AC7A887E2401B753D7F2",
+		pubKey: "EBCE85E49EA725B214C909FD9969570EB8F456D804B22B25C2A0DBFD0D31EC4C",
+		msg:    "010057F20000A005EBCE85E49EA725B214C909FD9969570EB8F456D804B22B25C2A0DBFD0D31EC4CD349D0629D29276F000000000000000000E1F5050000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037000000596F752066696E64206D616E7920626C6F636B732C2063616E20796F752073656E64206D6520736F6D6520636F696E20706C6561736521",
+	},
+	&verifyTestCase{
+		sig:    "737808F2DD170739E9D9CB6015889E22C3F159AEE29B77C98A4A22AF18091D0A37758FBDF1BBE5ACEAF38954C0247AF842C8EBEC7768E9C93B2A9B7CE198B9BA",
+		pubKey: "EBCE85E49EA725B214C909FD9969570EB8F456D804B22B25C2A0DBFD0D31EC4C",
+		msg:    "0100B7F20000A005EBCE85E49EA725B214C909FD9969570EB8F456D804B22B25C2A0DBFD0D31EC4CC9C550D65643EF77000000000000000000E1F5050000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037000000596F752066696E64206D616E7920626C6F636B732C2063616E20796F752073656E64206D6520736F6D6520636F696E20706C6561736521",
+	},
+}
+
+func TestVerify(t *testing.T) {
+	//for _, tc := range verifyTestCases {
+	//	sig := hexToBytes(tc.sig)
+	//	pubKey := hexToBytes(tc.pubKey)
+	//	msg := hexToBytes(tc.msg)
+	//	assert.True(t, Verify(sig, msg, pubKey, true))
+	//}
+	msg := make([]byte, 128)
+	for i := 0; i < 128; i++ {
+		msg[i] = byte(i)
+	}
+	sig := hexToBytes("cea74dd7177ddd8bd88e4a0d8807da533e95195d97cc4bcb0f946f355a8c85035ebe57fe9628f93405cf9f7e83bfc64968bc992d3508434a3023fba6b6cab491")
+	pubKey := hexToBytes("a9fc9b42e3918c3e109fdc819aa092fd06ce7c18d653bf003b31d48d35699104")
+	//msg := hexToBytes(tc.msg)
+	assert.True(t, Verify(sig, msg, pubKey, true))
+}
+
+func BenchmarkSecretPhraseToPrivateKey(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		secretPhraseToPrivateKey(secretPhrase)
+	}
+}
+
+func BenchmarkSecretPhraseToPublicKey(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		secretPhraseToPublicKey(secretPhrase)
+	}
+}
+
+func BenchmarkSign(b *testing.B) {
+	msg := make([]byte, 128)
+	for i := 0; i < 128; i++ {
+		msg[i] = byte(i)
+	}
+	for i := 0; i < b.N; i++ {
+		Sign(msg, secretPhrase)
+		for j := 0; j < 128; j++ {
+			msg[j] = byte(i + j)
+		}
+	}
+}
+
+func BenchmarkVerify(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		tc := verifyTestCases[i%len(verifyTestCases)]
+		sig := hexToBytes(tc.sig)
+		pubKey := hexToBytes(tc.pubKey)
+		msg := hexToBytes(tc.msg)
+		Verify(sig, msg, pubKey, true)
+	}
+}
+
+func TestVerify2(t *testing.T) {
+	prikey, _ := hex.DecodeString("387d0aa2ee3c4be10c32a09c3326b83aee57fbd9b0aa3a35bd0533d657919643")
+	msg := []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+
+
+	pub1,_ := hex.DecodeString("a9fc9b42e3918c3e109fdc819aa092fd06ce7c18d653bf003b31d48d35699104")
+	pub := owcrypt.Point_mulBaseG(prikey, owcrypt.ECC_CURVE_ED25519)
+	fmt.Println(hex.EncodeToString(pub))
+	pub, _ = owcrypt.CURVE25519_convert_Ed_to_X(pub)
+
+	fmt.Println(hex.EncodeToString(pub))
+	sig, _, ret := owcrypt.Signature(prikey, nil, msg,owcrypt.ECC_CURVE_X25519)
+	if ret != owcrypt.SUCCESS {
+	}
+	s,_:= Sign2(msg,prikey)
+	fmt.Println(hex.EncodeToString(sig))
+	fmt.Println(hex.EncodeToString(Sign(msg,secretPhrase)))
+	fmt.Println(hex.EncodeToString(s))
+
+	ret2 := owcrypt.Verify(pub1, nil, msg, sig, owcrypt.ECC_CURVE_X25519)
+	fmt.Println(ret2)
+
+	fmt.Println(Verify(sig, msg, pub, true))
+	fmt.Println(Verify(Sign(msg,secretPhrase), msg, pub, false))
+	fmt.Println(Verify(s, msg, pub, false))
+
+
+
+}
+
+
+
+
+
+func TestVerify3(t *testing.T) {
+
+	sig, _ := hex.DecodeString("dc8eefdedc350dbbecffe198d7c511dcc7be23ff6f5a6683e50ab9899c0c2d7e83b54aaf0ae9ea3ee23c476801401f07a1e1d839a6266eb055a3a7184c923985")
+	msg, _ := hex.DecodeString("0000832364011800b62b71519385d3ca30a9c4df605e9ee7d90097f17039a8aba6f04d0b346a6ee33a4263dd37b4ee7740420f0000000000f026700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
+	pub, _ := hex.DecodeString("b62b71519385d3ca30a9c4df605e9ee7d90097f17039a8aba6f04d0b346a6ee3")
+
+	edpub, _ := owcrypt.CURVE25519_convert_Ed_to_X(pub)
+
+
+	prikey, _ := hex.DecodeString("387d0aa2ee3c4be10c32a09c3326b83aee57fbd9b0aa3a35bd0533d657919643")
+
+	fmt.Println(hex.EncodeToString(edpub))
+
+	owcrypt.Signature(prikey,nil,msg,owcrypt.ECC_CURVE_X25519)
+	ret2 := owcrypt.Verify(edpub, nil, msg, sig, owcrypt.ECC_CURVE_X25519)
+	fmt.Println(	ret2)
+	s,_:= Sign2(msg,prikey)
+	fmt.Println(	Verify(s,msg,edpub,false))
+
+
+	//ed_pubkey, _ := eddsa.ED25519_genPub(prikey)
+
+	//signbit := edpub[31] & 0x80
+
+	//s[63] &= 0x7F
+	//s[63] |= signbit
+
+	ret3 := owcrypt.Verify(edpub, nil, msg, s, owcrypt.ECC_CURVE_X25519)
+	fmt.Println(	ret3)
+
+}
+
+
+
+func TestVerify4(t *testing.T) {
+
+	//sig, _ := hex.DecodeString("dc8eefdedc350dbbecffe198d7c511dcc7be23ff6f5a6683e50ab9899c0c2d7e83b54aaf0ae9ea3ee23c476801401f07a1e1d839a6266eb055a3a7184c923985")
+	msg, _ := hex.DecodeString("0000832364011800b62b71519385d3ca30a9c4df605e9ee7d90097f17039a8aba6f04d0b346a6ee33a4263dd37b4ee7740420f0000000000f026700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000")
+	pub, _ := hex.DecodeString("b62b71519385d3ca30a9c4df605e9ee7d90097f17039a8aba6f04d0b346a6ee3")
+
+	edpub, _ := owcrypt.CURVE25519_convert_Ed_to_X(pub)
+
+
+	prikey, _ := hex.DecodeString("387d0aa2ee3c4be10c32a09c3326b83aee57fbd9b0aa3a35bd0533d657919643")
+
+	fmt.Println(hex.EncodeToString(edpub))
+
+	s2,_,_ := owcrypt.Signature(prikey,nil,msg,owcrypt.ECC_CURVE_X25519)
+	ret2 := owcrypt.Verify(edpub, nil, msg, s2, owcrypt.ECC_CURVE_X25519)
+	fmt.Println(	ret2)
+
+	fmt.Println(	Verify(s2,msg,edpub,true))
+
+	//s,_:= Sign2(msg,prikey)
+	//fmt.Println(	Verify(s,msg,edpub,false))
+	//
+	//
+	////ed_pubkey, _ := eddsa.ED25519_genPub(prikey)
+	//
+	////signbit := edpub[31] & 0x80
+	//
+	////s[63] &= 0x7F
+	////s[63] |= signbit
+	//
+	//ret3 := owcrypt.Verify(edpub, nil, msg, s, owcrypt.ECC_CURVE_X25519)
+	//fmt.Println(	ret3)
+
+}
