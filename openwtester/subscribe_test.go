@@ -40,12 +40,21 @@ func (sub *subscriberSingle) BlockScanNotify(header *openwallet.BlockHeader) err
 func (sub *subscriberSingle) BlockExtractDataNotify(sourceKey string, data *openwallet.TxExtractData) error {
 	log.Notice("account:", sourceKey)
 
+
+	if data.Transaction.GetExtParam().Get("memo").String() != ""{
+		log.Std.Notice("memo is [%s]",data.Transaction.GetExtParam().Get("memo").String())
+	}else{
+		log.Std.Notice("memo is nil")
+	}
+
 	for i, input := range data.TxInputs {
 		log.Std.Notice("data.TxInputs[%d]: %+v", i, input)
+
 	}
 
 	for i, output := range data.TxOutputs {
 		log.Std.Notice("data.TxOutputs[%d]: %+v", i, output)
+
 	}
 
 	log.Std.Notice("data.Transaction: %+v", data.Transaction)
@@ -74,6 +83,12 @@ func TestSubscribeAddress(t *testing.T) {
 		addrs      = map[string]string{
 			"LTG-NKUN-SFN9-4D4U-7X8UE": "sender",
 			"LTG-45DW-CZQU-T24P-E8NUU": "receiver",
+			"LTG-49PH-KJ4L-GTS5-64ZQU": "receiver",
+			"LTG-RFW7-USTF-66C7-E3A6K": "receiver",
+			"LTG-6C62-K7KG-FDLG-FL7F5": "receiver",
+			"LTG-AY35-82UW-DFJ3-BT42A": "receiver",
+			"LTG-GSFA-V7XY-3VR9-AE9ND": "receiver",
+			"LTG-8HCX-64UF-BA37-9JKV5": "receiver",
 		}
 	)
 
@@ -120,7 +135,7 @@ func TestSubscribeAddress(t *testing.T) {
 		scanner.SetBlockchainDAI(dai)
 	}
 
-	scanner.SetRescanBlockHeight(36134)
+	scanner.SetRescanBlockHeight(37094)
 
 	if scanner == nil {
 		log.Error(symbol, "is not support block scan")

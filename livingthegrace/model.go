@@ -117,19 +117,20 @@ type Transaction struct {
 			"requestProcessingTime": 2
 		}
 	*/
-	Hash        string
-	From        string
-	To          string
-	Amount      string
-	Fee         string
-	Symbol      string
-	BlockHash   string
-	BlockHeight uint64
-	Status      string
-	TxType      string
-	SubType     string
-	Memo        string
-	Timestamp   uint64
+	Hash         string
+	From         string
+	To           string
+	Amount       string
+	Fee          string
+	Symbol       string
+	BlockHash    string
+	BlockHeight  uint64
+	Status       string
+	TxType       string
+	SubType      string
+	Memo         string
+	Timestamp    uint64
+	SendAppendix *SendAppendix
 }
 
 func NewTransaction(result *gjson.Result) *Transaction {
@@ -138,9 +139,9 @@ func NewTransaction(result *gjson.Result) *Transaction {
 	obj.From = result.Get("senderRS").String()
 	obj.To = result.Get("recipientRS").String()
 	obj.Amount = result.Get("amountNQT").String()
-	amount_dec, _ := decimal.NewFromString(obj.Amount)
-	amount_dec = amount_dec.Shift(-8)
-	obj.Amount = amount_dec.String()
+	amountDec, _ := decimal.NewFromString(obj.Amount)
+	amountDec = amountDec.Shift(-8)
+	obj.Amount = amountDec.String()
 	obj.Symbol = "LTG"
 	obj.BlockHash = result.Get("block").String()
 	obj.BlockHeight = result.Get("height").Uint()
@@ -149,6 +150,18 @@ func NewTransaction(result *gjson.Result) *Transaction {
 	obj.TxType = result.Get("type").String()
 	obj.SubType = result.Get("subtype").String()
 	obj.Timestamp = result.Get("timestamp").Uint() + 1561852800
+	if result.Get("attachment").Exists() {
+		obj.SendAppendix = &SendAppendix{
+			Version:       int64(result.Get("attachment").Get("version\\.Message").Uint()),
+			Message:       result.Get("attachment").Get("message").String(),
+			MessageIsText: result.Get("attachment").Get("messageIsText").Bool(),
+		}
+	}
+	if obj.SendAppendix != nil {
+		if obj.SendAppendix.Version == 1 && obj.SendAppendix.MessageIsText {
+			obj.Memo = obj.SendAppendix.Message
+		}
+	}
 	return &obj
 }
 
@@ -162,31 +175,39 @@ type RawTransaction struct {
 }
 
 type RawTransactionV2 struct {
-	Sender        string `json:"sender"`
-	Recipient     uint64 `json:"recipient"`
-	Symbol        string `json:"symbol"`
-	DeadLine      uint32 `json:"deadLine"`
-	Fee           uint64 `json:"fee"`
-	Amount        uint64 `json:"amount"`
-	Signature     string `json:"signature"`
-	Timestamp     uint32 `json:"timestamp"`
-	EcBlockHeight uint32 `json:"ecBlockHeight,omitempty"`
-	EcBlockId     uint64 `json:"ecBlockId,omitempty"`
-	Version       uint32 `json:"version,omitempty"`
+	Sender        string        `json:"sender"`
+	Recipient     uint64        `json:"recipient"`
+	Symbol        string        `json:"symbol"`
+	DeadLine      uint32        `json:"deadLine"`
+	Fee           uint64        `json:"fee"`
+	Amount        uint64        `json:"amount"`
+	Signature     string        `json:"signature"`
+	Timestamp     uint32        `json:"timestamp"`
+	EcBlockHeight uint32        `json:"ecBlockHeight,omitempty"`
+	EcBlockId     uint64        `json:"ecBlockId,omitempty"`
+	Version       uint32        `json:"version,omitempty"`
+	Appendix      *SendAppendix `json:"attachment"`
 }
 
 type RawTransactionSend struct {
-	EcBlockHeight   uint32 `json:"ecBlockHeight,omitempty"`
-	EcBlockId       uint64 `json:"ecBlockId,omitempty"`
-	Version         uint32 `json:"version,omitempty"`
-	Type            uint64 `json:"type"`
-	Deadline        uint32 `json:"deadline"`
-	AmountNQT       uint64 `json:"amountNQT"`
-	FeeNQT          uint64 `json:"feeNQT"`
-	Signature       string `json:"signature"`
-	SenderPublicKey string `json:"senderPublicKey"`
-	Recipient       uint64 `json:"recipient"`
-	Timestamp       uint32 `json:"timestamp"`
+	EcBlockHeight   uint32        `json:"ecBlockHeight,omitempty"`
+	EcBlockId       uint64        `json:"ecBlockId,omitempty"`
+	Version         uint32        `json:"version,omitempty"`
+	Type            uint64        `json:"type"`
+	Deadline        uint32        `json:"deadline"`
+	AmountNQT       uint64        `json:"amountNQT"`
+	FeeNQT          uint64        `json:"feeNQT"`
+	Signature       string        `json:"signature"`
+	SenderPublicKey string        `json:"senderPublicKey"`
+	Recipient       uint64        `json:"recipient"`
+	Timestamp       uint32        `json:"timestamp"`
+	Appendix        *SendAppendix `json:"attachment,omitempty"`
+}
+
+type SendAppendix struct {
+	Version       int64  `json:"version.Message"`
+	Message       string `json:"message"`
+	MessageIsText bool   `json:"messageIsText"`
 }
 
 func (rawTx *RawTransaction) Hash() []byte {

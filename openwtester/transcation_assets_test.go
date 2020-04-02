@@ -20,6 +20,7 @@ import (
 	"github.com/blocktree/openwallet/v2/openw"
 	"github.com/blocktree/openwallet/v2/openwallet"
 	"testing"
+	"time"
 )
 
 func testGetAssetsAccountBalance(tm *openw.WalletManager, walletID, accountID string) {
@@ -40,7 +41,7 @@ func testGetAssetsAccountTokenBalance(tm *openw.WalletManager, walletID, account
 	log.Info("token balance:", balance.Balance)
 }
 
-func testCreateTransactionStep(tm *openw.WalletManager, walletID, accountID, to, amount, feeRate string, contract *openwallet.SmartContract) (*openwallet.RawTransaction, error) {
+func testCreateTransactionStep(tm *openw.WalletManager, walletID, accountID, to, amount, feeRate,memo string, contract *openwallet.SmartContract) (*openwallet.RawTransaction, error) {
 
 	//err := tm.RefreshAssetsAccountBalance(testApp, accountID)
 	//if err != nil {
@@ -48,7 +49,7 @@ func testCreateTransactionStep(tm *openw.WalletManager, walletID, accountID, to,
 	//	return nil, err
 	//}
 
-	rawTx, err := tm.CreateTransaction(testApp, walletID, accountID, amount, to, feeRate, "", contract)
+	rawTx, err := tm.CreateTransaction(testApp, walletID, accountID, amount, to, feeRate, memo, contract)
 
 	if err != nil {
 		log.Error("CreateTransaction failed, unexpected error:", err)
@@ -118,28 +119,37 @@ func testSubmitTransactionStep(tm *openw.WalletManager, rawTx *openwallet.RawTra
 
 func TestTransfer(t *testing.T) {
 
+	//LTG-45DW-CZQU-T24P-E8NUU
+	//LTG-49PH-KJ4L-GTS5-64ZQU
+	//LTG-4VSG-H2MR-Y2QK-47JWG
+	//LTG-6C62-K7KG-FDLG-FL7F5
+	//LTG-73XT-BS88-QN5R-9P2KQ
+	//LTG-8HCX-64UF-BA37-9JKV5
+	//LTG-9QDM-VWFN-ZFRV-B5HF6
+	//LTG-AY35-82UW-DFJ3-BT42A
+	//LTG-GSFA-V7XY-3VR9-AE9ND
+	//LTG-RFW7-USTF-66C7-E3A6K
+	//LTG-RPYP-Y4R2-2W5A-GLTWU
+
 	addrs := []string{
 		//"LTG-8JKU-8ZGQ-3LRS-9NPVH",
 		//"LTG-73XT-BS88-QN5R-9P2KQ",
-		//"LTG-45DW-CZQU-T24P-E8NUU",
-		//"LTG-49PH-KJ4L-GTS5-64ZQU",
-		//"LTG-RFW7-USTF-66C7-E3A6K",
-		//"LTG-6C62-K7KG-FDLG-FL7F5",
-		//"LTG-AY35-82UW-DFJ3-BT42A",
-		//"LTG-GSFA-V7XY-3VR9-AE9ND",
-		//"LTG-8HCX-64UF-BA37-9JKV5",
-		//"LTG-4VSG-H2MR-Y2QK-47JWG",
-		//"LTG-RPYP-Y4R2-2W5A-GLTWU",
-		"LTG-SVYP-66K4-WFDW-EM2W2",
-		"LTG-QNP4-F46A-UZX7-FRDQA",
-		"LTG-K6UC-JHM2-V627-H4W34",
-		"LTG-TMLD-S5TB-78Y2-2KLXK",
-		"LTG-VEY6-VWBX-QGSU-FSAJ9",
-		"LTG-NXZF-TQ4U-H7RV-G24BE",
-		"LTG-UTHN-X6AR-ZKTR-DWVLM",
-		"LTG-E5E3-D8W7-3BE2-DEWVD",
-		"LTG-HUJ6-7K7G-SP4T-8J6CP",
-		"LTG-86X2-W683-S2FN-2KKUT",
+		"LTG-45DW-CZQU-T24P-E8NUU",
+		"LTG-49PH-KJ4L-GTS5-64ZQU",
+		"LTG-RFW7-USTF-66C7-E3A6K",
+		"LTG-6C62-K7KG-FDLG-FL7F5",
+		"LTG-AY35-82UW-DFJ3-BT42A",
+		"LTG-GSFA-V7XY-3VR9-AE9ND",
+		"LTG-8HCX-64UF-BA37-9JKV5",
+		//"LTG-8JKU-8ZGQ-3LRS-9NPVH",
+		//"LTG-K6UC-JHM2-V627-H4W34",
+		//"LTG-TMLD-S5TB-78Y2-2KLXK",
+		//"LTG-VEY6-VWBX-QGSU-FSAJ9",
+		//"LTG-NXZF-TQ4U-H7RV-G24BE",
+		//"LTG-UTHN-X6AR-ZKTR-DWVLM",
+		//"LTG-E5E3-D8W7-3BE2-DEWVD",
+		//"LTG-HUJ6-7K7G-SP4T-8J6CP",
+		//"LTG-86X2-W683-S2FN-2KKUT",
 	}
 
 	tm := testInitWalletManager()
@@ -151,10 +161,9 @@ func TestTransfer(t *testing.T) {
 	walletID := "WJCbRxzKfukURWonxTPd7rxvUbVBEgRBMW"
 	accountID := "DdFbucjCkNopZTTvLKWgRDscJnaMiV49eBwUdtn7mQ4T"
 	testGetAssetsAccountBalance(tm, walletID, accountID)
-
 	for _, to := range addrs {
 
-		rawTx, err := testCreateTransactionStep(tm, walletID, accountID, to, "0.3", "", nil)
+		rawTx, err := testCreateTransactionStep(tm, walletID, accountID, to, "0.001", "", "998877771",nil)
 		if err != nil {
 			return
 		}
@@ -174,7 +183,7 @@ func TestTransfer(t *testing.T) {
 			return
 		}
 
-		//time.Sleep(5 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 }
 

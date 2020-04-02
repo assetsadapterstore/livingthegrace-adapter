@@ -175,9 +175,9 @@ func (decoder *TransactionDecoder) VerifyRawTransaction(wrapper openwallet.Walle
 			publicKey, _ := hex.DecodeString(keySignature.Address.PublicKey)
 			msg, _ := hex.DecodeString(keySignature.Message)
 
+			fmt.Println("msg:", keySignature.Message)
 
 			enpub, _ := owcrypt.CURVE25519_convert_Ed_to_X(publicKey)
-
 
 			////验证签名
 			ret := owcrypt.Verify(enpub, nil, msg, signature, keySignature.EccType)
@@ -196,6 +196,7 @@ func (decoder *TransactionDecoder) VerifyRawTransaction(wrapper openwallet.Walle
 				Version:         tx.Version,
 				EcBlockHeight:   tx.EcBlockHeight,
 				EcBlockId:       tx.EcBlockId,
+				Appendix:        tx.Appendix,
 			}
 
 			result, _ := json.Marshal(tNewSend)
@@ -239,6 +240,7 @@ func (decoder *TransactionDecoder) SubmitRawTransaction(wrapper openwallet.Walle
 		AccountID:  rawTx.Account.AccountID,
 		Fees:       rawTx.Fees,
 		SubmitTime: time.Now().Unix(),
+		ExtParam:   rawTx.ExtParam,
 	}
 
 	tx.WxID = openwallet.GenTransactionWxID(tx)
@@ -299,7 +301,7 @@ func (decoder *TransactionDecoder) CreateSummaryRawTransaction(wrapper openwalle
 			continue
 		}
 
-		decoder.wm.Log.Debugf("balance: %v", addrBalance.Amount)
+		decoder.wm.Log.Debugf("balance: %v", balance.String())
 		decoder.wm.Log.Debugf("fees: %v", decoder.wm.Config.FixFees.String())
 		decoder.wm.Log.Debugf("sumAmount: %v", sumAmount.String())
 
@@ -375,8 +377,6 @@ func (decoder *TransactionDecoder) createRawTransaction(
 
 	enpub, _ := owcrypt.CURVE25519_convert_Ed_to_X(pub)
 
-
-
 	feeTo := decoder.wm.Config.FixFees.Shift(decimals)
 
 	//目标LTG转换
@@ -391,6 +391,18 @@ func (decoder *TransactionDecoder) createRawTransaction(
 	if err != nil {
 		return err
 	}
+
+	memo := rawTx.GetExtParam().Get("memo").String()
+
+	if memo != "" {
+		eop.Appendix = &p2p.Appendix{
+			Message: &p2p.Appendix_Message{
+				Content: []byte(memo),
+				IsText:  true,
+			},
+		}
+	}
+
 	eop.Header = &p2p.TransactionHeader{
 		SenderPublicKey: enpub,
 		Recipient:       recipient,
@@ -417,6 +429,14 @@ func (decoder *TransactionDecoder) createRawTransaction(
 		EcBlockHeight: eop.Header.EcBlockHeight,
 		EcBlockId:     eop.Header.EcBlockId,
 	}
+	if memo != "" {
+		tx.Appendix = &SendAppendix{
+			Message:       memo,
+			MessageIsText: true,
+			Version:       1,
+		}
+	}
+
 	txJson, _ := json.Marshal(tx)
 	rawTx.RawHex = hex.EncodeToString(txJson)
 
