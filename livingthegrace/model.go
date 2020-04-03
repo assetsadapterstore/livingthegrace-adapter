@@ -145,7 +145,12 @@ func NewTransaction(result *gjson.Result) *Transaction {
 	obj.Symbol = "LTG"
 	obj.BlockHash = result.Get("block").String()
 	obj.BlockHeight = result.Get("height").Uint()
+
 	obj.Fee = result.Get("feeNQT").String()
+	feeDec, _ := decimal.NewFromString(obj.Fee)
+	feeDec = feeDec.Shift(-8)
+	obj.Fee = feeDec.String()
+
 	obj.Status = "1"
 	obj.TxType = result.Get("type").String()
 	obj.SubType = result.Get("subtype").String()

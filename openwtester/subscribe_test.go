@@ -39,7 +39,7 @@ func (sub *subscriberSingle) BlockScanNotify(header *openwallet.BlockHeader) err
 //BlockTxExtractDataNotify 区块提取结果通知
 func (sub *subscriberSingle) BlockExtractDataNotify(sourceKey string, data *openwallet.TxExtractData) error {
 	log.Notice("account:", sourceKey)
-
+	log.Notice("fee:", data.Transaction.Fees)
 
 	if data.Transaction.GetExtParam().Get("memo").String() != ""{
 		log.Std.Notice("memo is [%s]",data.Transaction.GetExtParam().Get("memo").String())
@@ -50,10 +50,12 @@ func (sub *subscriberSingle) BlockExtractDataNotify(sourceKey string, data *open
 	for i, input := range data.TxInputs {
 		log.Std.Notice("data.TxInputs[%d]: %+v", i, input)
 
+		log.Notice("intput:to:",input.Amount)
 	}
 
 	for i, output := range data.TxOutputs {
 		log.Std.Notice("data.TxOutputs[%d]: %+v", i, output)
+		log.Notice("output:to:",output.Amount)
 
 	}
 
@@ -89,6 +91,7 @@ func TestSubscribeAddress(t *testing.T) {
 			"LTG-AY35-82UW-DFJ3-BT42A": "receiver",
 			"LTG-GSFA-V7XY-3VR9-AE9ND": "receiver",
 			"LTG-8HCX-64UF-BA37-9JKV5": "receiver",
+			"LTG-VNKD-C65H-QAZF-B5CAZ":"receiver",
 		}
 	)
 

@@ -398,7 +398,7 @@ func (bs *BlockScanner) InitExtractResult(sourceKey string, tx *Transaction, res
 	to := tx.To
 
 	transx := &openwallet.Transaction{
-		Fees:        "0",
+		Fees:        tx.Fee,
 		Coin:        coin,
 		BlockHash:   result.BlockHash,
 		BlockHeight: result.BlockHeight,
