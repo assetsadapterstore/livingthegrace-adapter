@@ -60,6 +60,13 @@ type Block struct {
 	Timestamp uint64   `json:"timestamp"`
 }
 
+//{"cheap":3675000,"standard":5145000,"priority":7350000,"requestProcessingTime":0}
+type SupportFee struct {
+	Cheap    uint64 `json:"cheap"`
+	Standard uint64 `json:"standard"`
+	Priority uint64 `json:"priority"`
+}
+
 func NewBlock(result *gjson.Result) *Block {
 	obj := Block{}
 	obj.Height = result.Get("height").Uint()
@@ -74,6 +81,15 @@ func NewBlock(result *gjson.Result) *Block {
 	}
 	return &obj
 }
+
+func NewSupportFee(result *gjson.Result) *SupportFee {
+	obj := SupportFee{}
+	obj.Standard = result.Get("standard").Uint()
+	obj.Cheap = result.Get("cheap").Uint()
+	obj.Priority = result.Get("priority").Uint()
+	return &obj
+}
+
 
 //BlockHeader 区块链头
 func (b *Block) BlockHeader(symbol string) *openwallet.BlockHeader {

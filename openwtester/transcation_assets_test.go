@@ -16,6 +16,7 @@
 package openwtester
 
 import (
+	"fmt"
 	"github.com/blocktree/openwallet/v2/log"
 	"github.com/blocktree/openwallet/v2/openw"
 	"github.com/blocktree/openwallet/v2/openwallet"
@@ -163,7 +164,7 @@ func TestTransfer(t *testing.T) {
 	testGetAssetsAccountBalance(tm, walletID, accountID)
 	for _, to := range addrs {
 
-		rawTx, err := testCreateTransactionStep(tm, walletID, accountID, to, "0.001", "", "998877771",nil)
+		rawTx, err := testCreateTransactionStep(tm, walletID, accountID, to, "0.1", "", "998877771",nil)
 		if err != nil {
 			return
 		}
@@ -182,6 +183,8 @@ func TestTransfer(t *testing.T) {
 		if err != nil {
 			return
 		}
+		fmt.Print("fees:")
+		fmt.Println(rawTx.Fees)
 
 		time.Sleep(5 * time.Second)
 	}

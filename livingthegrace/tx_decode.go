@@ -67,6 +67,9 @@ func (decoder *TransactionDecoder) CreateRawTransaction(wrapper openwallet.Walle
 
 	amount, _ := decimal.NewFromString(amountStr)
 
+
+
+	fee := decoder.GetFees()
 	for _, addr := range addresses {
 
 		addrBalance, err := decoder.wm.GetWalletDetails(addr.Address)
@@ -77,13 +80,14 @@ func (decoder *TransactionDecoder) CreateRawTransaction(wrapper openwallet.Walle
 		balance, _ := decimal.NewFromString(addrBalance.Amount)
 		balance = balance.Shift(-decoder.wm.Decimal())
 		//余额不足查找下一个地址
-		totalSend := amount.Add(decoder.wm.Config.FixFees)
+		totalSend := amount.Add(fee)
 		if balance.GreaterThanOrEqual(totalSend) {
 			//只要找到一个合适使用的地址余额就停止遍历
 			findAddrBalance = addrBalance
 			break
 		}
 	}
+	rawTx.Fees = fee.String()
 
 	if findAddrBalance == nil {
 		return openwallet.Errorf(openwallet.ErrInsufficientBalanceOfAccount, "all address's balance of account is not enough")
@@ -100,6 +104,17 @@ func (decoder *TransactionDecoder) CreateRawTransaction(wrapper openwallet.Walle
 
 	return nil
 
+}
+
+
+func (decoder *TransactionDecoder) GetFees() decimal.Decimal{
+	supportFee,err := decoder.wm.GetSupportFee()
+	if err != nil{
+		return decoder.wm.Config.FixFees
+	}
+	feeLong := supportFee.Standard
+	feeDecimal := decimal.NewFromInt(int64(feeLong)).Shift(-decoder.wm.Decimal())
+	return feeDecimal
 }
 
 //SignRawTransaction 签名交易单
@@ -250,7 +265,7 @@ func (decoder *TransactionDecoder) SubmitRawTransaction(wrapper openwallet.Walle
 
 //GetRawTransactionFeeRate 获取交易单的费率
 func (decoder *TransactionDecoder) GetRawTransactionFeeRate() (feeRate string, unit string, err error) {
-	return decoder.wm.Config.FixFees.String(), "TX", nil
+	return decoder.GetFees().String(), "TX", nil
 }
 
 //CreateSummaryRawTransaction 创建汇总交易
@@ -278,8 +293,11 @@ func (decoder *TransactionDecoder) CreateSummaryRawTransaction(wrapper openwalle
 		return nil, fmt.Errorf("[%s] have not addresses", accountID)
 	}
 
+
 	for _, addr := range addresses {
 
+
+		fee := decoder.GetFees()
 		addrBalance, err := decoder.wm.GetWalletDetails(addr.Address)
 		if err != nil {
 			continue
@@ -296,13 +314,13 @@ func (decoder *TransactionDecoder) CreateSummaryRawTransaction(wrapper openwalle
 		sumAmount := balance.Sub(retainedBalance)
 
 		//减去手续费
-		sumAmount = sumAmount.Sub(decoder.wm.Config.FixFees)
+		sumAmount = sumAmount.Sub(fee)
 		if sumAmount.LessThanOrEqual(decimal.Zero) {
 			continue
 		}
 
 		decoder.wm.Log.Debugf("balance: %v", balance.String())
-		decoder.wm.Log.Debugf("fees: %v", decoder.wm.Config.FixFees.String())
+		decoder.wm.Log.Debugf("fees: %v", fee.String())
 		decoder.wm.Log.Debugf("sumAmount: %v", sumAmount.String())
 
 		//创建一笔交易单
@@ -313,6 +331,7 @@ func (decoder *TransactionDecoder) CreateSummaryRawTransaction(wrapper openwalle
 				sumRawTx.SummaryAddress: sumAmount.String(),
 			},
 			Required: 1,
+			Fees:fee.String(),
 		}
 
 		createErr := decoder.createRawTransaction(
@@ -377,7 +396,9 @@ func (decoder *TransactionDecoder) createRawTransaction(
 
 	enpub, _ := owcrypt.CURVE25519_convert_Ed_to_X(pub)
 
-	feeTo := decoder.wm.Config.FixFees.Shift(decimals)
+	feeToDecimal,_ := decimal.NewFromString(rawTx.Fees)
+
+	feeTo := feeToDecimal.Shift(decimals)
 
 	//目标LTG转换
 	recipient, _ := rsencoding.Decode(destination[4:])
@@ -456,7 +477,6 @@ func (decoder *TransactionDecoder) createRawTransaction(
 	accountTotalSent = decimal.Zero.Sub(accountTotalSent)
 	rawTx.Signatures[rawTx.Account.AccountID] = keySignList
 	rawTx.FeeRate = ""
-	rawTx.Fees = decoder.wm.Config.FixFees.String()
 	rawTx.IsBuilt = true
 	rawTx.TxAmount = accountTotalSent.StringFixed(decimals)
 	rawTx.TxFrom = txFrom

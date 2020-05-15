@@ -88,6 +88,17 @@ func (wm *WalletManager) GetLatestBlock() (*Block, error) {
 	return NewBlock(result), nil
 }
 
+
+func (wm *WalletManager) GetSupportFee() (*SupportFee, error) {
+
+	path := fmt.Sprintf("/burst?requestType=suggestFee")
+	result, err := wm.client.call("GET", path, nil)
+	if err != nil {
+		return nil, err
+	}
+	return NewSupportFee(result), nil
+}
+
 func (wm *WalletManager) GetBlock(num uint64) (*Block, error) {
 
 	path := fmt.Sprintf("/burst?requestType=getBlock&height=%d", num)
