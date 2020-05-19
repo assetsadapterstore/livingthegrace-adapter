@@ -429,7 +429,7 @@ func (decoder *TransactionDecoder) createRawTransaction(
 		Recipient:       recipient,
 		Amount:          uint64(amountTo.IntPart()),
 		Fee:             uint64(feeTo.IntPart()),
-		Deadline:        1440,
+		Deadline:        360,
 		Timestamp:       uint32(time.Now().Unix() - 1561852800),
 		Version:         1,
 		EcBlockHeight:   uint32(block.Height),
